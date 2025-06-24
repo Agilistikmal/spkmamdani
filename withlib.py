@@ -109,60 +109,40 @@ class FuzzySoilQuality:
             return 50.0, "Sedang"
     
     def plot_membership_functions(self):
-        """Plot fungsi keanggotaan dengan visualisasi sederhana tapi informatif"""
-        
-        # Definisi variabel untuk plot
-        variables = [
-            (self.ph, 'pH Tanah (Asam: <6.0, Normal: 6.0-7.0, Basa: >7.0)', 'Nilai pH', 'ph_membership'),
-            (self.nutrition, 'Nutrisi (Rendah: <100, Sedang: 100-200, Tinggi: >200 mg/kg)', 'Nutrisi (mg/kg)', 'nutrition_membership'),
-            (self.heavy_metal, 'Logam Berat (Rendah: <10, Sedang: 10-20, Tinggi: >20 mg/kg)', 'Logam Berat (mg/kg)', 'heavy_metal_membership'),
-            (self.organic_matter, 'Bahan Organik (Rendah: <2, Sedang: 2-5, Tinggi: >5%)', 'Bahan Organik (%)', 'organic_matter_membership'),
-            (self.quality, 'Kualitas Tanah (Buruk: 0-40, Sedang: 40-70, Baik: 70-100)', 'Skor Kualitas', 'quality_membership')
-        ]
-        
-        # Buat plot individual yang simpel
-        for var, title, xlabel, filename in variables:
-            fig, ax = plt.subplots(figsize=(10, 6))
-            var.view(ax=ax)
-            ax.set_title(title, fontsize=14, fontweight='bold', pad=15)
-            ax.set_xlabel(xlabel, fontsize=12)
-            ax.set_ylabel('Derajat Keanggotaan', fontsize=12)
+        """Plot fungsi keanggotaan dengan kode yang sangat ringkas, tanpa mengubah hasil visual maupun output print."""
+        plt.ioff()
+        def plot_mf(ax, universe, mfs):
+            for func, params, label in mfs:
+                ax.plot(universe, func(universe, params), label=label)
             ax.grid(True, alpha=0.3)
-            
-            # Hanya tambahkan legend jika ada elemen yang berlabel
-            handles, labels = ax.get_legend_handles_labels()
-            if handles:
-                ax.legend(fontsize=10)
-            
+            ax.legend(fontsize=10)
+        # Semua parameter membership function
+        mf_params = [
+            dict(var=self.ph, mfs=[(fuzz.trapmf, [4, 4, 5.5, 6.0], 'Asam'), (fuzz.trimf, [5.5, 6.5, 7.5], 'Normal'), (fuzz.trapmf, [6.5, 7.0, 9, 9], 'Basa')], title='pH Tanah (Asam: <6.0, Normal: 6.0-7.0, Basa: >7.0)', xlabel='Nilai pH', filename='ph_membership'),
+            dict(var=self.nutrition, mfs=[(fuzz.trimf, [0, 0, 150], 'Rendah'), (fuzz.trimf, [50, 150, 250], 'Sedang'), (fuzz.trimf, [150, 350, 350], 'Tinggi')], title='Nutrisi (Rendah: <100, Sedang: 100-200, Tinggi: >200 mg/kg)', xlabel='Nutrisi (mg/kg)', filename='nutrition_membership'),
+            dict(var=self.heavy_metal, mfs=[(fuzz.trimf, [0, 0, 15], 'Rendah'), (fuzz.trimf, [5, 15, 25], 'Sedang'), (fuzz.trimf, [15, 30, 30], 'Tinggi')], title='Logam Berat (Rendah: <10, Sedang: 10-20, Tinggi: >20 mg/kg)', xlabel='Logam Berat (mg/kg)', filename='heavy_metal_membership'),
+            dict(var=self.organic_matter, mfs=[(fuzz.trimf, [0, 0, 3], 'Rendah'), (fuzz.trimf, [1, 3.5, 6], 'Sedang'), (fuzz.trimf, [4, 10, 10], 'Tinggi')], title='Bahan Organik (Rendah: <2, Sedang: 2-5, Tinggi: >5%)', xlabel='Bahan Organik (%)', filename='organic_matter_membership'),
+            dict(var=self.quality, mfs=[(fuzz.trimf, [0, 0, 50], 'Buruk'), (fuzz.trimf, [20, 50, 80], 'Sedang'), (fuzz.trimf, [50, 100, 100], 'Baik')], title='Kualitas Tanah (Buruk: 0-40, Sedang: 40-70, Baik: 70-100)', xlabel='Skor Kualitas', filename='quality_membership')
+        ]
+        # Plot individual
+        for p in mf_params:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            plot_mf(ax, p['var'].universe, p['mfs'])
+            ax.set_title(p['title'], fontsize=14, fontweight='bold', pad=15)
+            ax.set_xlabel(p['xlabel'], fontsize=12)
+            ax.set_ylabel('Derajat Keanggotaan', fontsize=12)
             plt.tight_layout()
-            plt.savefig(f'output/{filename}.png', dpi=300, bbox_inches='tight')
+            plt.savefig(f"output/{p['filename']}.png", dpi=300, bbox_inches='tight')
             plt.close()
-        
-        # Buat gambar ringkasan
+        # Ringkasan
         fig, axes = plt.subplots(2, 3, figsize=(15, 10))
         fig.suptitle('Sistem Fuzzy Mamdani - Evaluasi Kualitas Tanah', fontsize=16, fontweight='bold')
-        
-        plot_vars = [
-            (self.ph, 'pH Tanah', axes[0, 0]),
-            (self.nutrition, 'Nutrisi', axes[0, 1]),
-            (self.heavy_metal, 'Logam Berat', axes[0, 2]),
-            (self.organic_matter, 'Bahan Organik', axes[1, 0]),
-            (self.quality, 'Kualitas (Output)', axes[1, 1])
-        ]
-        
-        for var, title, ax in plot_vars:
-            var.view(ax=ax)
-            ax.set_title(title, fontsize=12, fontweight='bold')
-            ax.grid(True, alpha=0.3)
-            
-            # Hanya tambahkan legend jika ada elemen yang berlabel
-            handles, labels = ax.get_legend_handles_labels()
-            if handles:
-                ax.legend(fontsize=8)
-        
-        # Sembunyikan subplot kosong dan tambahkan info
-        axes[1, 2].axis('off')
-        axes[1, 2].text(0.1, 0.5, 
+        for i, (p, ax) in enumerate(zip(mf_params, [axes[0,0], axes[0,1], axes[0,2], axes[1,0], axes[1,1]])):
+            plot_mf(ax, p['var'].universe, p['mfs'])
+            ax.set_title(p['title'].split('(')[0].strip(), fontsize=12, fontweight='bold')
+            ax.legend(fontsize=8)
+        axes[1,2].axis('off')
+        axes[1,2].text(0.1, 0.5, \
                        'Aturan Fuzzy:\n\n'
                        '1. pH Normal ∧ Nutrisi Tinggi ∧ Logam Rendah → Baik\n'
                        '2. pH (Asam ∨ Basa) ∧ Nutrisi Rendah ∧ Logam Tinggi → Buruk\n'
@@ -171,14 +151,179 @@ class FuzzySoilQuality:
                        '5. Bahan Organik Rendah ∧ Logam Tinggi → Buruk\n'
                        '6. pH Normal ∧ Nutrisi Tinggi ∧ Logam Sedang → Sedang\n\n'
                        'Agil Ghani Istikmal (5220411040)',
-                       fontsize=10, transform=axes[1, 2].transAxes,
+                       fontsize=10, transform=axes[1,2].transAxes,
                        bbox=dict(boxstyle="round,pad=0.5", facecolor="lightblue", alpha=0.7))
-        
         plt.tight_layout()
         plt.savefig('output/all_membership_functions.png', dpi=300, bbox_inches='tight')
         plt.close()
-        
         print("Visualisasi fungsi keanggotaan berhasil dibuat")
+
+    # Fungsi utilitas untuk manual membership degree
+    def _trimf(self, x, params):
+        a, b, c = params
+        if x <= a or x >= c:
+            return 0.0
+        elif a < x < b:
+            return (x - a) / (b - a)
+        elif b <= x < c:
+            return (c - x) / (c - b)
+        elif x == b:
+            return 1.0
+        return 0.0
+
+    def _trapmf(self, x, params):
+        a, b, c, d = params
+        if x <= a or x >= d:
+            return 0.0
+        elif a < x < b:
+            return (x - a) / (b - a)
+        elif b <= x <= c:
+            return 1.0
+        elif c < x < d:
+            return (d - x) / (d - c)
+        return 0.0
+
+    def _get_membership_degrees(self, ph, nutrition, heavy_metal, organic_matter):
+        """Hitung derajat keanggotaan semua input pada setiap label"""
+        ph_degrees = {
+            'asam': self._trapmf(ph, [4, 4, 5.5, 6.0]),
+            'normal': self._trimf(ph, [5.5, 6.5, 7.5]),
+            'basa': self._trapmf(ph, [6.5, 7.0, 9, 9])
+        }
+        nutrition_degrees = {
+            'rendah': self._trimf(nutrition, [0, 0, 150]),
+            'sedang': self._trimf(nutrition, [50, 150, 250]),
+            'tinggi': self._trimf(nutrition, [150, 350, 350])
+        }
+        heavy_metal_degrees = {
+            'rendah': self._trimf(heavy_metal, [0, 0, 15]),
+            'sedang': self._trimf(heavy_metal, [5, 15, 25]),
+            'tinggi': self._trimf(heavy_metal, [15, 30, 30])
+        }
+        organic_matter_degrees = {
+            'rendah': self._trimf(organic_matter, [0, 0, 3]),
+            'sedang': self._trimf(organic_matter, [1, 3.5, 6]),
+            'tinggi': self._trimf(organic_matter, [4, 10, 10])
+        }
+        return {
+            'ph': ph_degrees,
+            'nutrition': nutrition_degrees,
+            'heavy_metal': heavy_metal_degrees,
+            'organic_matter': organic_matter_degrees
+        }
+
+    def explain(self, ph, nutrition, heavy_metal, organic_matter):
+        """Tampilkan step-by-step perhitungan fuzzy untuk satu data input, termasuk detail perhitungan membership degree."""
+        from tabulate import tabulate
+        print("\n:: DETAIL FUZZIFIKASI")
+        print("[PH]")
+        ph_asam = self._explain_trapmf(ph, [4, 4, 5.5, 6.0], 'Asam')
+        ph_normal = self._explain_trimf(ph, [5.5, 6.5, 7.5], 'Normal')
+        ph_basa = self._explain_trapmf(ph, [6.5, 7.0, 9, 9], 'Basa')
+        print("\n[NUTRISI]")
+        nut_rendah = self._explain_trimf(nutrition, [0, 0, 150], 'Rendah')
+        nut_sedang = self._explain_trimf(nutrition, [50, 150, 250], 'Sedang')
+        nut_tinggi = self._explain_trimf(nutrition, [150, 350, 350], 'Tinggi')
+        print("\n[LOGAM BERAT]")
+        metal_rendah = self._explain_trimf(heavy_metal, [0, 0, 15], 'Rendah')
+        metal_sedang = self._explain_trimf(heavy_metal, [5, 15, 25], 'Sedang')
+        metal_tinggi = self._explain_trimf(heavy_metal, [15, 30, 30], 'Tinggi')
+        print("\n[BAHAN ORGANIK]")
+        org_rendah = self._explain_trimf(organic_matter, [0, 0, 3], 'Rendah')
+        org_sedang = self._explain_trimf(organic_matter, [1, 3.5, 6], 'Sedang')
+        org_tinggi = self._explain_trimf(organic_matter, [4, 10, 10], 'Tinggi')
+        # Tabel ringkasan
+        md = {
+            'ph': {'asam': ph_asam, 'normal': ph_normal, 'basa': ph_basa},
+            'nutrition': {'rendah': nut_rendah, 'sedang': nut_sedang, 'tinggi': nut_tinggi},
+            'heavy_metal': {'rendah': metal_rendah, 'sedang': metal_sedang, 'tinggi': metal_tinggi},
+            'organic_matter': {'rendah': org_rendah, 'sedang': org_sedang, 'tinggi': org_tinggi}
+        }
+        table = [
+            ["pH", ph, md['ph']['asam'], md['ph']['normal'], md['ph']['basa']],
+            ["Nutrisi", nutrition, md['nutrition']['rendah'], md['nutrition']['sedang'], md['nutrition']['tinggi']],
+            ["Logam Berat", heavy_metal, md['heavy_metal']['rendah'], md['heavy_metal']['sedang'], md['heavy_metal']['tinggi']],
+            ["Bahan Organik", organic_matter, md['organic_matter']['rendah'], md['organic_matter']['sedang'], md['organic_matter']['tinggi']]
+        ]
+        print("\nRingkasan Derajat Keanggotaan:")
+        print(tabulate(table, headers=["Variabel", "Nilai", "Rendah/Asam", "Sedang/Normal", "Tinggi/Basa"], floatfmt=".3f", tablefmt="rounded_grid"))
+        # 2. Firing strength rules
+        rules = []
+        # Aturan 1
+        r1 = min(md['ph']['normal'], md['nutrition']['tinggi'], md['heavy_metal']['rendah'])
+        rules.append(("pH normal ∧ nutrisi tinggi ∧ logam rendah → Baik", r1, "Baik"))
+        # Aturan 2
+        r2 = min(max(md['ph']['asam'], md['ph']['basa']), md['nutrition']['rendah'], md['heavy_metal']['tinggi'])
+        rules.append(("(pH asam ∨ basa) ∧ nutrisi rendah ∧ logam tinggi → Buruk", r2, "Buruk"))
+        # Aturan 3
+        r3 = min(md['ph']['normal'], md['nutrition']['sedang'], md['heavy_metal']['sedang'])
+        rules.append(("pH normal ∧ nutrisi sedang ∧ logam sedang → Sedang", r3, "Sedang"))
+        # Aturan 4
+        r4 = md['organic_matter']['tinggi']
+        rules.append(("bahan organik tinggi → Baik", r4, "Baik"))
+        # Aturan 5
+        r5 = min(md['organic_matter']['rendah'], md['heavy_metal']['tinggi'])
+        rules.append(("bahan organik rendah ∧ logam tinggi → Buruk", r5, "Buruk"))
+        # Aturan 6
+        r6 = min(md['ph']['normal'], md['nutrition']['tinggi'], md['heavy_metal']['sedang'])
+        rules.append(("pH normal ∧ nutrisi tinggi ∧ logam sedang → Sedang", r6, "Sedang"))
+        print("\nFiring Strength (α) Setiap Aturan:")
+        rule_table = [[i+1, desc, f"{alpha:.3f}", out] for i, (desc, alpha, out) in enumerate(rules)]
+        print(tabulate(rule_table, headers=["No", "Rule", "α", "Output"], tablefmt="rounded_grid"))
+        # 3. Agregasi
+        a_buruk = max(rules[1][1], rules[4][1])
+        a_sedang = max(rules[2][1], rules[5][1])
+        a_baik = max(rules[0][1], rules[3][1])
+        print(f"\nAgregasi α:")
+        print(f"  α_buruk  = max({rules[1][1]:.3f}, {rules[4][1]:.3f}) = {a_buruk:.3f}")
+        print(f"  α_sedang = max({rules[2][1]:.3f}, {rules[5][1]:.3f}) = {a_sedang:.3f}")
+        print(f"  α_baik   = max({rules[0][1]:.3f}, {rules[3][1]:.3f}) = {a_baik:.3f}")
+        # 4. Defuzzifikasi (pakai library agar konsisten)
+        score, category = self.evaluate(ph, nutrition, heavy_metal, organic_matter)
+        print(f"\nDefuzzifikasi (skor akhir): {score:.2f}")
+        print(f"Kategori: {category}\n")
+
+    def _explain_trimf(self, x, params, label):
+        a, b, c = params
+        print(f"  - {label} (triangular [{a}, {b}, {c}]):")
+        print(f"    x = {x}")
+        if x <= a or x >= c:
+            print(f"    Karena x <= {a} atau x >= {c}, maka μ = 0.0")
+            return 0.0
+        elif a < x < b:
+            val = (x - a) / (b - a)
+            print(f"    Karena {a} < x < {b}, maka μ = (x - {a}) / ({b} - {a}) = ({x} - {a}) / {b - a} = {val:.3f}")
+            return val
+        elif b <= x < c:
+            val = (c - x) / (c - b)
+            print(f"    Karena {b} <= x < {c}, maka μ = ({c} - x) / ({c} - {b}) = ({c} - {x}) / {c - b} = {val:.3f}")
+            return val
+        elif x == b:
+            print(f"    Karena x == {b}, maka μ = 1.0")
+            return 1.0
+        print(f"    (Tidak terdefinisi, μ = 0.0)")
+        return 0.0
+
+    def _explain_trapmf(self, x, params, label):
+        a, b, c, d = params
+        print(f"  - {label} (trapezoid [{a}, {b}, {c}, {d}]):")
+        print(f"    x = {x}")
+        if x <= a or x >= d:
+            print(f"    Karena x <= {a} atau x >= {d}, maka μ = 0.0")
+            return 0.0
+        elif a < x < b:
+            val = (x - a) / (b - a)
+            print(f"    Karena {a} < x < {b}, maka μ = (x - {a}) / ({b} - {a}) = ({x} - {a}) / {b - a} = {val:.3f}")
+            return val
+        elif b <= x <= c:
+            print(f"    Karena {b} <= x <= {c}, maka μ = 1.0")
+            return 1.0
+        elif c < x < d:
+            val = (d - x) / (d - c)
+            print(f"    Karena {c} < x < {d}, maka μ = ({d} - x) / ({d} - {c}) = ({d} - {x}) / {d - c} = {val:.3f}")
+            return val
+        print(f"    (Tidak terdefinisi, μ = 0.0)")
+        return 0.0
 
 def main():
     print()
@@ -194,6 +339,11 @@ def main():
     # Baca dan proses data
     try:
         df = pd.read_csv('data.csv')
+        
+        # Tampilkan step-by-step untuk semua data
+        for idx, row in df.iterrows():
+            print(f"\n:: STEP-BY-STEP PERHITUNGAN DATA {row['No']}")
+            system.explain(row['pH'], row['Nutrisi'], row['Logam_Berat'], row['Bahan_Organik'])
         
         # Siapkan data untuk tabel
         table_data = []
