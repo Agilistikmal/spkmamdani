@@ -267,11 +267,74 @@ Karena 7.0 ≤ 7.5 ≤ 9, maka nilai keanggotaan = 1.0 (plateau)
 
 ## Langkah 4: Defuzzifikasi
 
-Hanya kategori "Baik" aktif dengan α = 0.33
+Pada langkah ini, kita akan mencari nilai crisp (skor akhir) dari hasil fuzzy menggunakan metode Centroid (COG - Center of Gravity).
+
+Karena hanya kategori "Baik" yang aktif dengan α = 0.33, maka proses defuzzifikasi hanya menggunakan bagian dari fungsi keanggotaan "Baik" yang dipotong pada α = 0.33.
 
 **Fungsi Baik:** trimf [50, 100, 100]
-**Titik potong:** 50 + (100-50) × 0.33 = 66.5
+
+Bentuk fungsi keanggotaan output "Baik":
+
+- Segitiga dengan puncak di x = 100, alas dari x = 50 sampai x = 100.
+
+Karena α_baik = 0.33, maka segitiga dipotong secara horizontal pada μ = 0.33.
+
+### 1. Menentukan Batas Potong (x1)
+
+Potongan segitiga pada μ = 0.33:
+
+- Rumus garis naik: μ = (x - 50) / (100 - 50) = (x - 50) / 50
+- Set μ = 0.33:
+
+  0.33 = (x1 - 50) / 50
+  x1 = 50 + 0.33 × 50 = 66.5
+
+Jadi, segmen yang aktif adalah dari x = 66.5 sampai x = 100.
+
+### 2. Luas Daerah Aktif (A)
+
+Luas trapesium hasil pemotongan:
+
+- Alas bawah: 100 - 66.5 = 33.5
+- Tinggi kiri: 0
+- Tinggi kanan: 0.33
+- Luas = 0.5 × (alas bawah + alas atas) × tinggi
+- Karena segitiga, alas atas = 0 (di x = 100, μ = 0.33), alas bawah = 33.5, tinggi = 0.33
+
+Tapi lebih mudah:
+
+- Luas = 0.5 × (100 - 66.5) × 0.33 = 0.5 × 33.5 × 0.33 = 5.5275
+
+### 3. Mencari Centroid (COG)
+
+Centroid segitiga terpotong:
+
+- Karena hanya satu segitiga, centroid berada di tengah alas aktif:
+- x_cog = (66.5 + 100) / 2 = 83.25
+
+### 4. Perhitungan Skor Akhir
+
+Rumus centroid (COG):
 
 ```
+         ∑(μ(xi) × xi)
+COG = ──────────────
+         ∑μ(xi)
+```
+
+Karena hanya satu segmen aktif:
+
+- Pembilang: luas × centroid = 5.5275 × 83.25 = 459.74
+- Penyebut: luas = 5.5275
+
+Jadi,
 
 ```
+COG = 459.74 / 5.5275 = 83.25
+```
+
+### 5. Hasil Akhir
+
+**Skor akhir = 83.25 → Kategori: Baik**
+
+---
