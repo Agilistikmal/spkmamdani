@@ -278,9 +278,12 @@ class FuzzySoilQuality:
         print(f"  α_buruk  = max({rules[1][1]:.3f}, {rules[4][1]:.3f}) = {a_buruk:.3f}")
         print(f"  α_sedang = max({rules[2][1]:.3f}, {rules[5][1]:.3f}) = {a_sedang:.3f}")
         print(f"  α_baik   = max({rules[0][1]:.3f}, {rules[3][1]:.3f}) = {a_baik:.3f}")
-        # 4. Defuzzifikasi (pakai library agar konsisten)
+        # 4. Tampilkan rumus defuzzifikasi saja (tanpa perhitungan manual)
+        print(f"\nDefuzzifikasi (Metode Centroid):")
+        print(f"  Skor akhir = (α_buruk × z_buruk + α_sedang × z_sedang + α_baik × z_baik) / (α_buruk + α_sedang + α_baik)")
+        # 5. Defuzzifikasi (pakai library agar konsisten)
         score, category = self.evaluate(ph, nutrition, heavy_metal, organic_matter)
-        print(f"\nDefuzzifikasi (skor akhir): {score:.2f}")
+        print(f"\nDefuzzifikasi (skor akhir dari library): {score:.2f}")
         print(f"Kategori: {category}\n")
 
     def _explain_trimf(self, x, params, label):
@@ -325,6 +328,38 @@ class FuzzySoilQuality:
         print(f"    (Tidak terdefinisi, μ = 0.0)")
         return 0.0
 
+    def plot_input_membership_for_data(self, no, ph, nutrition, heavy_metal, organic_matter):
+        """Plot membership function tiap variabel dengan garis vertikal pada nilai input, simpan ke output/{no}/"""
+        import matplotlib.pyplot as plt
+        import os
+        # Siapkan folder
+        folder = f"output/{no}"
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        # Daftar parameter
+        mf_params = [
+            dict(var=self.ph, mfs=[(fuzz.trapmf, [4, 4, 5.5, 6.0], 'Asam'), (fuzz.trimf, [5.5, 6.5, 7.5], 'Normal'), (fuzz.trapmf, [6.5, 7.0, 9, 9], 'Basa')], title='pH Tanah', xlabel='Nilai pH', filename='ph', value=ph),
+            dict(var=self.nutrition, mfs=[(fuzz.trimf, [0, 0, 150], 'Rendah'), (fuzz.trimf, [50, 150, 250], 'Sedang'), (fuzz.trimf, [150, 350, 350], 'Tinggi')], title='Nutrisi', xlabel='Nutrisi (mg/kg)', filename='nutrition', value=nutrition),
+            dict(var=self.heavy_metal, mfs=[(fuzz.trimf, [0, 0, 15], 'Rendah'), (fuzz.trimf, [5, 15, 25], 'Sedang'), (fuzz.trimf, [15, 30, 30], 'Tinggi')], title='Logam Berat', xlabel='Logam Berat (mg/kg)', filename='heavy_metal', value=heavy_metal),
+            dict(var=self.organic_matter, mfs=[(fuzz.trimf, [0, 0, 3], 'Rendah'), (fuzz.trimf, [1, 3.5, 6], 'Sedang'), (fuzz.trimf, [4, 10, 10], 'Tinggi')], title='Bahan Organik', xlabel='Bahan Organik (%)', filename='organic_matter', value=organic_matter),
+            dict(var=self.quality, mfs=[(fuzz.trimf, [0, 0, 50], 'Buruk'), (fuzz.trimf, [20, 50, 80], 'Sedang'), (fuzz.trimf, [50, 100, 100], 'Baik')], title='Kualitas Tanah', xlabel='Skor Kualitas', filename='quality', value=None)
+        ]
+        for p in mf_params:
+            fig, ax = plt.subplots(figsize=(8, 5))
+            for func, params, label in p['mfs']:
+                ax.plot(p['var'].universe, func(p['var'].universe, params), label=label)
+            # Garis vertikal pada nilai input (kecuali quality)
+            if p['value'] is not None:
+                ax.axvline(p['value'], color='red', linestyle='--', label=f"Input: {p['value']}")
+            ax.set_title(p['title'], fontsize=13, fontweight='bold')
+            ax.set_xlabel(p['xlabel'])
+            ax.set_ylabel('Derajat Keanggotaan')
+            ax.grid(True, alpha=0.3)
+            ax.legend(fontsize=9)
+            plt.tight_layout()
+            plt.savefig(f"{folder}/{p['filename']}.png", dpi=200, bbox_inches='tight')
+            plt.close()
+
 def main():
     print()
     print("SISTEM FUZZY MAMDANI - EVALUASI KUALITAS TANAH")
@@ -344,6 +379,10 @@ def main():
         for idx, row in df.iterrows():
             print(f"\n:: STEP-BY-STEP PERHITUNGAN DATA {row['No']}")
             system.explain(row['pH'], row['Nutrisi'], row['Logam_Berat'], row['Bahan_Organik'])
+            # Plot membership function untuk data ini
+            system.plot_input_membership_for_data(
+                row['No'], row['pH'], row['Nutrisi'], row['Logam_Berat'], row['Bahan_Organik']
+            )
         
         # Siapkan data untuk tabel
         table_data = []

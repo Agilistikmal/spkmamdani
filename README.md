@@ -11,16 +11,19 @@ Proyek ini mengimplementasikan sistem fuzzy logika dengan metode Mamdani untuk m
 ### Parameter Input
 
 1. **pH Tanah**
+
    - Asam: < 6.0
    - Normal: 6.0 - 7.0
    - Basa: > 7.0
 
 2. **Kandungan Nutrisi (mg/kg)**
+
    - Rendah: < 100
    - Sedang: 100 - 200
    - Tinggi: > 200
 
 3. **Kandungan Logam Berat (mg/kg)**
+
    - Rendah: < 10
    - Sedang: 10 - 20
    - Tinggi: > 20
@@ -33,6 +36,7 @@ Proyek ini mengimplementasikan sistem fuzzy logika dengan metode Mamdani untuk m
 ### Parameter Output
 
 **Kualitas Tanah (Skor 0-100)**
+
 - Buruk: 0 - 40
 - Sedang: 40 - 70
 - Baik: 70 - 100
@@ -80,8 +84,9 @@ spkmamdani/
 ### Fungsi Keanggotaan
 
 Sistem menggunakan **fungsi keanggotaan yang sesuai spesifikasi**:
+
 - **pH Asam** (<6.0): Trapezoid shoulder kiri [4,4,5.5,6]
-- **pH Normal** (6.0-7.0): Triangular [5.5,6.5,7.5] 
+- **pH Normal** (6.0-7.0): Triangular [5.5,6.5,7.5]
 - **pH Basa** (>7.0): Trapezoid shoulder kanan [6.5,7,9,9]
 - **Variabel lainnya**: Triangular (trimf)
 
@@ -98,6 +103,7 @@ pip install -r requirements.txt
 ### 2. Persiapan Data
 
 Pastikan file `data.csv` tersedia dengan format:
+
 ```csv
 No,pH,Nutrisi,Logam_Berat,Bahan_Organik
 1,6.5,150,12,3
@@ -128,18 +134,22 @@ python withlib.py
 ### Analisis Hasil
 
 1. **Sample 1 (Skor: 50.0 - Sedang)**
+
    - pH normal (6.5), nutrisi sedang (150), logam berat sedang (12)
    - Sesuai dengan Aturan 3: menghasilkan kualitas sedang
 
 2. **Sample 2 (Skor: 78.9 - Baik)**
+
    - pH basa (7.5), nutrisi tinggi (250), logam berat rendah (5), bahan organik tinggi (6)
    - Memenuhi Aturan 4: bahan organik tinggi menghasilkan kualitas baik
 
 3. **Sample 3 (Skor: 18.1 - Buruk)**
+
    - pH asam (5.5), nutrisi rendah (50), logam berat tinggi (25), bahan organik rendah (1)
    - Memenuhi Aturan 2 dan 5: menghasilkan kualitas buruk
 
 4. **Sample 4 (Skor: 50.0 - Sedang)**
+
    - pH normal (6.8), nutrisi sedang (180), logam berat sedang (15)
    - Sesuai dengan Aturan 3: menghasilkan kualitas sedang
 
@@ -151,34 +161,47 @@ python withlib.py
 
 Sistem menghasilkan beberapa jenis visualisasi:
 
-#### 1. Fungsi Keanggotaan Individual
+#### 1. Fungsi Keanggotaan Global (Membership Function)
 
-**a. Fungsi Keanggotaan pH Tanah**
-![pH Membership](output/ph_membership.png)
+Gambar berikut adalah fungsi keanggotaan **global** (bukan per data), yang selalu di-replace setiap kali program dijalankan:
 
-**b. Fungsi Keanggotaan Kandungan Nutrisi**
-![Nutrition Membership](output/nutrition_membership.png)
+- ![pH Membership](output/ph_membership.png)
+- ![Nutrition Membership](output/nutrition_membership.png)
+- ![Heavy Metal Membership](output/heavy_metal_membership.png)
+- ![Organic Matter Membership](output/organic_matter_membership.png)
+- ![Quality Membership](output/quality_membership.png)
+- ![Semua Fungsi Keanggotaan](output/all_membership_functions.png)
 
-**c. Fungsi Keanggotaan Logam Berat**
-![Heavy Metal Membership](output/heavy_metal_membership.png)
+Gambar-gambar ini hanya menampilkan bentuk kurva keanggotaan yang digunakan dalam sistem fuzzy, **tidak tergantung pada data.csv**.
 
-**d. Fungsi Keanggotaan Bahan Organik**
-![Organic Matter Membership](output/organic_matter_membership.png)
+#### 2. Visualisasi Per Data (Per Sample)
 
-**e. Fungsi Keanggotaan Kualitas Tanah (Output)**
-![Quality Membership](output/quality_membership.png)
+Untuk setiap data pada `data.csv`, sistem akan membuat folder khusus, misal `output/1/`, `output/2/`, dst. Di dalamnya terdapat gambar fungsi keanggotaan **dengan garis vertikal merah** pada nilai input:
 
-#### 2. Ringkasan Semua Fungsi Keanggotaan
+Contoh struktur hasil:
 
-![Semua Fungsi Keanggotaan](output/all_membership_functions.png)
+```
+output/
+  ├── 1/
+  │    ├── ph.png
+  │    ├── nutrition.png
+  │    ├── heavy_metal.png
+  │    ├── organic_matter.png
+  │    └── quality.png
+  ├── 2/
+  │    ├── ph.png
+  │    ├── nutrition.png
+  │    ├── heavy_metal.png
+  │    ├── organic_matter.png
+  │    └── quality.png
+  ...
+```
 
-Gambar di atas menampilkan ringkasan semua fungsi keanggotaan untuk variabel input (pH, Nutrisi, Logam Berat, Bahan Organik) dan output (Kualitas Tanah). Setiap variabel menggunakan fungsi keanggotaan triangular yang memberikan transisi yang halus antar kategori.
+Setiap gambar menampilkan fungsi keanggotaan dan **garis vertikal** pada nilai input data tersebut, sehingga memudahkan analisis visual per data.
 
-#### 3. Proses Inferensi Fuzzy
+#### 3. Proses Inferensi Fuzzy (Opsional)
 
-![Proses Inferensi](output/inference_ph6.5_nut150.0_metal12.0_org3.0.png)
-
-Gambar di atas menunjukkan proses inferensi fuzzy untuk sample data pertama (pH=6.5, Nutrisi=150, Logam Berat=12, Bahan Organik=3%). Garis vertikal merah menunjukkan nilai input dan output, memvisualisasikan bagaimana sistem mengambil keputusan untuk menghasilkan skor kualitas 50.0 (kategori Sedang).
+Jika ingin menambahkan visualisasi proses inferensi (misal: output/inference\_\*.png), bisa dikembangkan lebih lanjut.
 
 ## Keunggulan Sistem
 
@@ -191,6 +214,7 @@ Gambar di atas menunjukkan proses inferensi fuzzy untuk sample data pertama (pH=
 ## Validasi Sistem
 
 Sistem telah divalidasi dengan:
+
 - Aturan fuzzy sesuai spesifikasi
 - Fungsi keanggotaan triangular yang tepat
 - Proses defuzzifikasi center of gravity
@@ -201,6 +225,10 @@ Sistem telah divalidasi dengan:
 
 Sistem fuzzy Mamdani ini berhasil mengevaluasi kualitas tanah dengan akurat berdasarkan parameter pH, nutrisi, logam berat, dan bahan organik. Hasil evaluasi menunjukkan bahwa sistem dapat membedakan dengan baik antara tanah berkualitas baik, sedang, dan buruk sesuai dengan aturan-aturan yang telah ditetapkan.
 
+**Visualisasi global** membantu memahami bentuk fungsi keanggotaan yang digunakan, sedangkan **visualisasi per data** sangat membantu dalam menganalisis hasil fuzzifikasi dan inferensi untuk setiap sampel secara individual.
+
+Sistem ini sangat cocok untuk edukasi, analisis laboratorium, maupun pengambilan keputusan berbasis data kualitas tanah.
+
 ---
 
-**© 2025 - Agil Ghani Istikmal (5220411040)** 
+**© 2025 - Agil Ghani Istikmal (5220411040)**
