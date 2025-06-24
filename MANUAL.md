@@ -48,23 +48,148 @@ COG = ──────────────
 - pH Normal menggunakan **triangular** [5.5,6.5,7.5]
 - pH Basa menggunakan **trapezoid** [6.5,7,9,9] (shoulder kanan)
 
-## Visualisasi Fungsi Keanggotaan
+## Visualisasi dan Rumus Fungsi Keanggotaan Global
 
-Gambar berikut adalah fungsi keanggotaan **global** (bukan per data), yang selalu di-replace setiap kali program dijalankan:
+### 1. pH Tanah
 
 ![Fungsi Keanggotaan pH](output/ph_membership.png)
 
-Gambar-gambar global ini hanya menampilkan bentuk kurva keanggotaan yang digunakan dalam sistem fuzzy, **tidak tergantung pada data.csv**.
+- **Asam** (trapesium kiri: [4, 4, 5.5, 6])
 
-Untuk setiap data pada `data.csv`, sistem juga membuat folder khusus, misal `output/1/`, `output/2/`, dst. Di dalamnya terdapat gambar fungsi keanggotaan **dengan garis vertikal merah** pada nilai input, misal:
+```
+           ⎧ 1,                        jika x ≤ 4
+           ⎪ (5.5 - x) / (5.5 - 4),    jika 4 < x < 5.5
+μ_asam(x)= ⎨ (6 - x) / (6 - 5.5),      jika 5.5 ≤ x < 6
+           ⎪ 0,                        jika x ≥ 6
+           ⎩
+```
 
-- output/1/ph.png
-- output/1/nutrition.png
-- output/1/heavy_metal.png
-- output/1/organic_matter.png
-- output/1/quality.png
+- **Normal** (segitiga: [5.5, 6.5, 7.5])
 
-Setiap gambar menampilkan fungsi keanggotaan dan **garis vertikal** pada nilai input data tersebut, sehingga memudahkan analisis visual per data.
+```
+              ⎧ 0,                        jika x ≤ 5.5
+              ⎪ (x - 5.5) / (6.5 - 5.5),  jika 5.5 < x ≤ 6.5
+μ_normal(x) = ⎨ (7.5 - x) / (7.5 - 6.5),  jika 6.5 < x < 7.5
+              ⎪ 0,                        jika x ≥ 7.5
+              ⎩
+```
+
+- **Basa** (trapesium kanan: [6.5, 7, 9, 9])
+
+```
+           ⎧ 0,                        jika x ≤ 6.5
+           ⎪ (x - 6.5) / (7.0 - 6.5),   jika 6.5 < x ≤ 7.0
+μ_basa(x)= ⎨ 1,                         jika 7.0 < x ≤ 9.0
+           ⎪ 0,                         jika x > 9.0
+           ⎩
+```
+
+---
+
+### 2. Nutrisi
+
+![Fungsi Keanggotaan Nutrisi](output/nutrition_membership.png)
+
+- **Rendah** (segitiga: [0, 0, 150])
+
+```
+             ⎧ 1,                        jika x = 0
+             ⎪ (150 - x) / (150 - 0),    jika 0 < x < 150
+μ_rendah(x)= ⎨ 0,                        jika x ≥ 150
+             ⎩
+```
+
+- **Sedang** (segitiga: [50, 150, 250])
+
+```
+              ⎧ 0,                        jika x ≤ 50
+              ⎪ (x - 50) / (150 - 50),    jika 50 < x ≤ 150
+μ_sedang(x) = ⎨ (250 - x) / (250 - 150),  jika 150 < x < 250
+              ⎪ 0,                        jika x ≥ 250
+              ⎩
+```
+
+- **Tinggi** (segitiga: [150, 350, 350])
+
+```
+             ⎧ 0,                        jika x ≤ 150
+             ⎪ (x - 150) / (350 - 150),   jika 150 < x < 350
+μ_tinggi(x)= ⎨ 1,                         jika x = 350
+             ⎪ 0,                         jika x > 350
+             ⎩
+```
+
+---
+
+### 3. Logam Berat
+
+![Fungsi Keanggotaan Logam Berat](output/heavy_metal_membership.png)
+
+- **Rendah** (segitiga: [0, 0, 15])
+
+```
+             ⎧ 1,                        jika x = 0
+             ⎪ (15 - x) / (15 - 0),      jika 0 < x < 15
+μ_rendah(x)= ⎨ 0,                        jika x ≥ 15
+             ⎩
+```
+
+- **Sedang** (segitiga: [5, 15, 25])
+
+```
+              ⎧ 0,                        jika x ≤ 5
+              ⎪ (x - 5) / (15 - 5),       jika 5 < x ≤ 15
+μ_sedang(x) = ⎨ (25 - x) / (25 - 15),     jika 15 < x < 25
+              ⎪ 0,                        jika x ≥ 25
+              ⎩
+```
+
+- **Tinggi** (segitiga: [15, 30, 30])
+
+```
+             ⎧ 0,                        jika x ≤ 15
+             ⎪ (x - 15) / (30 - 15),      jika 15 < x < 30
+μ_tinggi(x)= ⎨ 1,                         jika x = 30
+             ⎪ 0,                         jika x > 30
+             ⎩
+```
+
+---
+
+### 4. Bahan Organik
+
+![Fungsi Keanggotaan Bahan Organik](output/organic_matter_membership.png)
+
+- **Rendah** (segitiga: [0, 0, 3])
+
+```
+             ⎧ 1,                        jika x = 0
+             ⎪ (3 - x) / (3 - 0),         jika 0 < x < 3
+μ_rendah(x)= ⎨ 0,                        jika x ≥ 3
+             ⎩
+```
+
+- **Sedang** (segitiga: [1, 3.5, 6])
+
+```
+              ⎧ 0,                        jika x ≤ 1
+              ⎪ (x - 1) / (3.5 - 1),      jika 1 < x ≤ 3.5
+μ_sedang(x) = ⎨ (6 - x) / (6 - 3.5),      jika 3.5 < x < 6
+              ⎪ 0,                        jika x ≥ 6
+              ⎩
+```
+
+- **Tinggi** (segitiga: [4, 10, 10])
+
+```
+             ⎧ 0,                        jika x ≤ 4
+             ⎪ (x - 4) / (10 - 4),        jika 4 < x < 10
+μ_tinggi(x)= ⎨ 1,                         jika x = 10
+             ⎪ 0,                         jika x > 10
+             ⎩
+```
+
+---
 
 ## Langkah 1: Fuzzifikasi
 
@@ -148,20 +273,5 @@ Hanya kategori "Baik" aktif dengan α = 0.33
 **Titik potong:** 50 + (100-50) × 0.33 = 66.5
 
 ```
-Luas = 0.33 × (100 - 66.5) = 11.055
-Centroid = (66.5 + 100) / 2 = 83.25
 
-         11.055 × 83.25
-COG = ─────────────── = 83.25
-          11.055
 ```
-
-## Hasil Akhir
-
-**Skor = 78.93 → Kategori: Baik**
-
-**Catatan:** Dengan perubahan fungsi pH basa menjadi trapezoid [6.5,7,9,9], nilai pH=7.5 menghasilkan μ_basa = 1.0 (sebelumnya 0.4), namun hasil akhir tetap dalam kategori Baik dengan skor yang sedikit berbeda dari perhitungan triangular.
-
-## Kesimpulan
-
-Perhitungan manual dan sistem fuzzy Mamdani yang diimplementasikan telah memberikan hasil yang konsisten dan akurat dalam mengevaluasi kualitas tanah. Visualisasi global membantu memahami bentuk fungsi keanggotaan, sedangkan visualisasi per data sangat berguna untuk menelusuri proses fuzzifikasi dan inferensi pada setiap sampel. Sistem ini dapat digunakan sebagai alat bantu edukasi maupun analisis laboratorium kualitas tanah.
